@@ -3,20 +3,21 @@
 (use srfi-1) ; iota
 (use srfi-69) ; hash-table
 (use loops)
+(load "mdcd-stubs.scm")
 
-; ## Public: 
-; splits an list into multiple lists of n length (or smaller).
-; ### Parameters:
-;   * n - the size of the lists it should be broken into.
-;   * lst - the list to be split
-;     If the provided list can not be evenly divisible
-;     by n then the last returned list will contain
-;     the remaining elements.
-; ### Returns:
-; A list of smaller list of the specified length (or smaller).
-; ### Examples:
-;     (split-by 2 '(1 2 3 4)) ; => ((1 2) (3 4))
-;     (split-by 2 '(1 2 3)) ; => ((1 2) (3)) ; not evenly divisible
+(doc-fun 'split-by "## Public: 
+splits an list into multiple lists of n length (or smaller).
+### Parameters:
+ * n - the size of the lists it should be broken into.
+ * lst - the list to be split
+   If the provided list can not be evenly divisible
+   by n then the last returned list will contain
+   the remaining elements.
+### Returns:
+A list of smaller list of the specified length (or smaller).
+### Examples:
+   (split-by 2 '(1 2 3 4)) ; => ((1 2) (3 4))
+   (split-by 2 '(1 2 3)) ; => ((1 2) (3)) ; not evenly divisible")
 (define (split-by n lst)
    (let ( (list-size (length lst)) )
      (if (not (eq? 0 (modulo list-size n)))
