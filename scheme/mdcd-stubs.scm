@@ -5,16 +5,27 @@
 ; versions of these methods which will, in turn, 
 ; generate your documentation.
 
-; ## Private:
-; The core hash table that stores the loaded docs.
-; ## Note:
-; Do not access this directly. Implementation is 
-; likely to change. Only use the supplied methods.
-(define *mdcd-reference* (make-hash-table))
+; # Dependencies
+; directory-utils
+(use directory-utils)
+
+(define (set-mdcd-home file-path)
+  (define *mdcd-home* file-path))
+
+(define (get-mdcd-home)
+  ; FIXME can't reference undefined var
+  ; can't test if var is defined.
+  (cond ((null? *mdcd-home*) (values "~/mdcd/scheme/"))
+        (else (values *mdcd-home*))))
+
+; ## Public:
+; Gets the documentation for the specified key
+; ### Parameters:
+; * key - the name of the method/variable/syntax you want 
+;   documentation for.
 (define (get-doc key)
   ; WARNING: THE FOLLOWING IS INCORRECT! Dunno right syntax
-  (with-exception-handler (hash-table-ref *mdcd-reference* key)
-                          (conc "No docs found for " key)))
+  (hash-table-ref/default *mdcd-reference* key "Undocumented"))
 
 ; ## Public:
 ; Generates documentation for a function.
@@ -26,6 +37,7 @@
 ; ### Returns:
 ; Returns no values, this is just a stub.
 (define (doc-fun name doc-string)
+  (
   (hash-table-set! *mdcd-reference* (format "~s" name) doc-string))
 
 ; ## Public:
