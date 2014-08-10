@@ -5,7 +5,7 @@
 (use loops)
 (load "mdcd-stubs.scm")
 
-(doc-fun 'split-by "## Public: 
+(doc-fun "split-by" "## Public: split-by
 splits an list into multiple lists of n length (or smaller).
 ### Parameters:
  * n - the size of the lists it should be broken into.
