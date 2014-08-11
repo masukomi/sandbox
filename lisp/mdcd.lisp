@@ -8,18 +8,14 @@
 ;
 ; # Dependencies
 ; * cl-utilities
-(defpackage :mdcd
-	(:use #:cl #:cl-utilities)
-	(:export
-      :doc
-      :show-doc
-      :set-mdcd-home
-      :get-mdcd-home
-      :path-for
-    ))
+
+; two package files for this
+; mdcd-package.lisp (the real one)
+; mdcd-test-package.lisp (the one for testing with everything exported)
 
 (in-package :mdcd)
 
+(shadowing-import 'cl-utilities:with-gensyms)
 (use-package :cl-utilities)
 
 ;(require-extension regex)
@@ -164,6 +160,21 @@ The item-type serves to help segregate the stored files. "
 ; Alas, there's nothing left that needs documenting.
 
 (defun show-doc (name &optional &key (item-type :function) (grouping nil))
+  (doc 'show-doc "## Public: show-doc
+Loads and displays the documentation for the specified object.
+
+### Parameters:
+* name - The name of the function/variable/thing you're seeking docs for.
+* Optional *Named* Parameters:
+  * item-type - A symbol. Defaults to :function but can be any of the following: 
+    :function, :variable, :macro, :class, :meta.
+  * grouping -  A symbol. Defaults to nil otherwise is a custom grouping, 
+    typically a package name under which to collect a set of documentation.
+
+### Returns:
+A string containing the documention requested or an indication of 
+where it attempted to find it.
+" :grouping "mdcd")
  (let ((file-path (path-for name item-type grouping)))
       (if (probe-file file-path)
         (progn 
@@ -172,3 +183,52 @@ The item-type serves to help segregate the stored files. "
             (close in)
             (return-from show-doc (format nil "~{~A~^~% ~}" response))))
         (format nil "No Docs Found at ~A" file-path))))
+
+; unit tested
+(defun line-matches-section? (line line-number section)
+  (if (and (equal 1 line-number) (equal section :description))
+      (return-from line-matches-section? t)
+      (and (not (not (search 
+                      (symbol-name section)
+                      ; upcasing line because symbol-name returns upcase string
+                      (string-upcase line)))))))
+
+(defun capture-good-line (line header-line section-found line-matches-section)
+  (cond 
+    ; line in wrong section
+    ((and (not section-found) (not header-line)) t) ; do nothing
+    ; line in section we do want
+    ((and section-found (not header-line))
+      (append response '(line)))
+    ; header of correct section
+    ((and (not section-found) header-line)  line-matches-section 
+            (setf section-found t) ; so that we'll hit the previous cond
+                                   ; for the next line
+            (append response '(line))
+            )
+    ; header of NEXT section (we don't want it)
+    ((and section-found header-line)
+      (return t))))
+
+
+(defun extract-section (section doc-string)
+;   (doc 'extract-section "## Private: extract-section
+; Extracts the specified section of a given doc string (if available).
+;
+; ### Parameters:
+; * section - A symbol: any of the following: 
+;   :description, :parameters, :returns, :notes, :examples. :description will 
+;   extract the first section which hopefully includes the name, visibility,
+;   and overview.
+; * doc-string - The doc string from which to attempt the extraction 
+;   of the specified section
+; ### Returns: 
+; The extracted section of the docs." :grouping "mdcd")
+  (let ((lines (split-sequence #\newline doc-string))
+        (response '())
+        (section-found nil)
+        (line-number 0)) ;end let vars
+    (loop for line in lines
+      do ( (lambda () (print line))
+                      ))
+    (return-from extract-section response)))
