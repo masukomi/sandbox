@@ -186,7 +186,7 @@ where it attempted to find it.
 
 ; unit tested
 (defun line-matches-section? (line line-number section)
-  (if (and (equal 1 line-number) (equal section :description))
+  (if (and (equal 0 line-number) (equal section :description))
       (return-from line-matches-section? t)
       (and (not (not (search 
                       (symbol-name section)
@@ -196,22 +196,35 @@ where it attempted to find it.
 (defun capture-good-line (line header-line section-found line-matches-section)
   (cond 
     ; line in wrong section
-    ((and (not section-found) (not header-line)) t) ; do nothing
+    ((and (not section-found) (not header-line)) 
+      (return-from capture-good-line nil)) ; do nothing
     ; line in section we do want
     ((and section-found (not header-line))
-      (append response '(line)))
+      (return-from capture-good-line `(,line)))
     ; header of correct section
-    ((and (not section-found) header-line)  line-matches-section 
-            (setf section-found t) ; so that we'll hit the previous cond
-                                   ; for the next line
-            (append response '(line))
+    ((and (not section-found) header-line) line-matches-section 
+            (return-from capture-good-line `(,line) )
             )
     ; header of NEXT section (we don't want it)
     ((and section-found header-line)
-      (return t))))
+      (return-from capture-good-line nil))
+    (t (return-from capture-good-line nil)))) ; can't happen... i hope
 
+(defun string-is-md-header? (a-string)
+  (equal 0 (position #\# a-string)))
 
-(defun extract-section (section doc-string)
+(defun find-header-lines (lines &optional (line-num -1))
+  (map 'list (lambda (y) (car y)) ; get the line numbers from dotted pairs
+    (remove-if-not (lambda (x) (cdr x)) ; remove non-dotted pairs
+      ; generate a list of (line-num . t) and (line-num) entries
+      (cond
+        ((> (length lines) 1)
+          (loop for i upto (length lines)
+                for line = (nth i lines)
+                collect (cons i (string-is-md-header? line))))
+        (t `(,(cons (+ 1 line-num) (string-is-md-header? (car lines))))))
+      )))
+
 ;   (doc 'extract-section "## Private: extract-section
 ; Extracts the specified section of a given doc string (if available).
 ;
@@ -224,11 +237,26 @@ where it attempted to find it.
 ;   of the specified section
 ; ### Returns: 
 ; The extracted section of the docs." :grouping "mdcd")
-  (let ((lines (split-sequence #\newline doc-string))
+
+(defun extract-section (section doc-string)
+  (let* ((lines (split-sequence #\newline doc-string))
         (response '())
-        (section-found nil)
-        (line-number 0)) ;end let vars
-    (loop for line in lines
-      do ( (lambda () (print line))
-                      ))
-    (return-from extract-section response)))
+        (header-line-nums (find-header-lines lines))
+        ) ;end let vars
+    (do ((remaining-header-lines header-line-nums (cdr remaining-header-lines))
+          (line-number (car header-line-nums) (car remaining-header-lines))
+        )
+      (nil)                       ;Do forever(ish).
+      (if line-number
+          (let ((line (nth line-number lines))
+                (next-line (nth (+ 1 line-number) lines))
+                (more-headers (> (length remaining-header-lines) 0))
+                )
+            (if (line-matches-section? line line-number section) 
+                 (return-from extract-section
+                    (if (and 
+                          next-line ; if this is not the last line
+                          more-headers) ; and there's a header after 
+                          (loop for i from line-number to (- (nth 1 remaining-header-lines) 1) collect (nth i lines))
+                          (loop for i from line-number to (- (length lines) 1) collect (nth i lines))))))
+          (return nil)))))

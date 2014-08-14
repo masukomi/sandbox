@@ -20,4 +20,7 @@
 
       ; PRIVATE METHODS EXPOSED JUST FOR TESTING
       :line-matches-section?
+      :capture-good-line
+      :find-header-lines
+      :string-is-md-header?
     ))
