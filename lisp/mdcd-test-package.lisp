@@ -23,4 +23,5 @@
       :capture-good-line
       :find-header-lines
       :string-is-md-header?
+      :mdcd-file-for
     ))

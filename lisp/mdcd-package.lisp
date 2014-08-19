@@ -3,6 +3,7 @@
 	(:export
       :doc
       :show-doc
+      :show-params
       :set-mdcd-home
       :get-mdcd-home
       :path-for

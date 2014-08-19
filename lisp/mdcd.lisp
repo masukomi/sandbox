@@ -66,16 +66,17 @@
   ; in overlap. I could hash the name but I would prefer
   ; to keep the files as something meaningful to humans.
   (let ((cleaned name))
-    (loop for bad-char in '(#\: #\/ #\* #\| #\+)
+    (loop for bad-char in '(#\/ #\* #\| #\+)
       do (setf cleaned (substitute #\_ bad-char cleaned))
       )
+    (setf cleaned (substitute #\/ #\: cleaned))
     (return-from mdcd-name-cleaner cleaned)))
 
 ; ## Public: mdcd-file-for
 ; Provides the file-path for a given identifier. 
 ; ### Paramaters:
 ; * identifier - the function/variable/syntax you want documentation for.
-; * subfolder - This is typically the grouping from doc
+; * subfolder - This is typically the package name extracted from the name
 ; * item-type - see the "doc" function for details on the item-type param
 ; ### Returns:
 ; The file-path where the identifiers docs should be written / found.
@@ -86,7 +87,7 @@
                               ,subfolder
                               ,item-type)
                               :name
-                              (mdcd-name-cleaner identifier)
+                              identifier
                               :type  "md"))
 
 (defun mdcd-ensure-dir (a-pathname)
@@ -113,15 +114,41 @@
       (close stream)))
 
 
-(defun path-for (name item-type grouping)
-  (mdcd-file-for 
-    (string-downcase (symbol-name name)) 
-    (cond ((not grouping) "")
-          (t (string-downcase (symbol-name grouping))))
-    (string-downcase (symbol-name item-type))
-    ))
+(defun path-for (name item-type)
+  (let* (
+        (name (mdcd-name-cleaner 
+                  (string-downcase (if (typep name 'symbol)
+                                       (symbol-name name) 
+                                       name))))
+                  ; ^^ makes the package delimiters look like path delimiters
+        (split-name (split-sequence #\/ name))
+        (subfolder (car split-name))
+        (name-name (nth 1 split-name))
+          ; ^^ treats the path delimiters like directory indicators
+          ; 
+          ; name should always look like a variable
+          ; or a function and not have something on the end 
+          ; that looks like a file extension.
+          ; Yes, this may muck with people using 
+          ; things like foo.txt as a method name
+          ; but i think it should still get them the right docs
+          ; in the end.
 
-  
+    ); END let vars
+    ; subfolder is currently a pathname object
+    ; need to convert it to a string
+    (if (equal name-name name)
+        (setf subfolder ""))
+    ; name      : foo/bar
+    ; name-name : bar
+    ; subfolder : foo
+    ; item-type : FUNCTIONF
+    (mdcd-file-for 
+      name-name                                 ; identifier
+      subfolder                                 ; subfolder
+      (string-downcase (symbol-name item-type)) ; item-type
+      )))
+
 
 (defun doc (name doc-string 
   &optional &key (item-type :function) (grouping nil))
@@ -129,27 +156,33 @@
 Generates and saves documentation.
 
 ### Paramaters:
-* name - a symbol representing the name of the function
+* name - a symbol or string representing the name of the function. 
 * doc-string - a markdown string documenting the function
 * Optional Named Parameters
   * item-type - A symbol. Defaults to :function but can be any of the following: 
     :function, :variable, :macro, :class, :meta. :meta is for use in documenting
     less specific things, like notes about the package. 
-  * grouping - A symbol. Defaults to nil otherwise is a custom grouping, 
-    typically a package name under which to collect a set of documentation.
 
 ### Returns:
 The doc-string passed in
 
-### Note:
-The item-type serves to help segregate the stored files. "
+### Notes:
+The item-type and colons in names (packages) all to help segregate 
+the stored files. In practice the colon in a function / variable's name 
+and item-type should be more than enough.
+
+### Examples:
+
+    (doc 'my-function \"## Public: my-function\")
+    (doc \"package:my-packaged-function\" \"## Public: my-packaged-function\")
+    (doc 'my-function \"## Public: my-function\" 'function)"
  ; we can't set the documentation directly 
  ; because we want to use this in place of the standard 
  ; docstring , which means the method wouldn't exist yet
  ; to have its documentation set.
  ; instead we'll just use print
  ;(setf (documentation name 'function) doc-string)
- (let ((file-path (path-for name item-type grouping)))
+ (let ((file-path (path-for name item-type)))
         (mdcd-write-doc doc-string file-path)
         file-path)
         doc-string)
@@ -159,8 +192,10 @@ The item-type serves to help segregate the stored files. "
 ; YAY.
 ; Alas, there's nothing left that needs documenting.
 
-(defun show-doc (name &optional &key (item-type :function) (grouping nil))
-  (doc 'show-doc "## Public: show-doc
+(doc "mdcd:doc" (documentation 'doc 'function))
+
+(defun show-doc (name &optional &key (item-type :function))
+  (doc "mdcd:show-doc" "## Public: show-doc name [:item-type]
 Loads and displays the documentation for the specified object.
 
 ### Parameters:
@@ -168,21 +203,22 @@ Loads and displays the documentation for the specified object.
 * Optional *Named* Parameters:
   * item-type - A symbol. Defaults to :function but can be any of the following: 
     :function, :variable, :macro, :class, :meta.
-  * grouping -  A symbol. Defaults to nil otherwise is a custom grouping, 
-    typically a package name under which to collect a set of documentation.
 
 ### Returns:
 A string containing the documention requested or an indication of 
 where it attempted to find it.
-" :grouping "mdcd")
- (let ((file-path (path-for name item-type grouping)))
-      (if (probe-file file-path)
-        (progn 
-          (let ((in (open file-path)) (response '())  )
-            (setf response (append response `(,(read-line in))))
-            (close in)
-            (return-from show-doc (format nil "~{~A~^~% ~}" response))))
-        (format nil "No Docs Found at ~A" file-path))))
+")
+ (let ((file-path (path-for name item-type)))
+      (let ((in (open file-path :if-does-not-exist nil))
+            (response '()))
+        (when in
+          (loop for line = (read-line in nil)
+               while line do (setf response (append response `(,line))))
+          (close in))
+        (if (> (length response) 0)
+          (format nil "~{~A~^~% ~}" response)
+          (format nil "No Docs Found at ~A" file-path)
+          ))))
 
 ; unit tested
 (defun line-matches-section? (line line-number section)
@@ -236,7 +272,7 @@ where it attempted to find it.
 ; * doc-string - The doc string from which to attempt the extraction 
 ;   of the specified section
 ; ### Returns: 
-; The extracted section of the docs." :grouping "mdcd")
+; The extracted section of the docs." )
 
 (defun extract-section (section doc-string)
   (let* ((lines (split-sequence #\newline doc-string))
@@ -260,3 +296,7 @@ where it attempted to find it.
                           (loop for i from line-number to (- (nth 1 remaining-header-lines) 1) collect (nth i lines))
                           (loop for i from line-number to (- (length lines) 1) collect (nth i lines))))))
           (return nil)))))
+
+(defun show-params (name &optional &key (item-type :function) )
+  (extract-section :parameters (show-doc name item-type )))
+

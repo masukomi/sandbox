@@ -55,6 +55,39 @@
                             "notes here")))
     (assert-equal '(0 2 5) (mdcd:find-header-lines split-doc-string))
                             ))
+
+(defun extract-relevant-file-paths (ff-response last-n)
+  (let* ((ff-response-dir (cdr (pathname-directory ff-response)))
+         (testable-response 
+          (loop for i from (- (length ff-response-dir) last-n) 
+                      upto (- (length ff-response-dir) 1) 
+                      collect (nth i ff-response-dir))))
+      (return-from extract-relevant-file-paths testable-response)))
+
+(deftest mdcd-file-for-test (SupportFunctionsSuite)
+  ; (let ((testable-response (extract-relevant-file-paths 
+  ;                             (mdcd:mdcd-file-for "foo") 2)))
+  ;  (assert-equal '("mdcd" "lisp") testable-response ))
+  (let ((testable-response (extract-relevant-file-paths  
+                              (mdcd:mdcd-file-for "bar" "foo" "function") 4)))
+    (assert-equal '("mdcd" "lisp" "foo" "function") testable-response ))
+    ; "bar" is the filename (minus extension)
+    ; "foo" is the subdirectory "foo.md" will be stored in.
+    ; "function" is another subdirectory based on type of thing that's been
+    ; documented.
+  (let ((testable-response (extract-relevant-file-paths  
+                              (mdcd:mdcd-file-for "bar" "foo") 3)))
+    (assert-equal '("mdcd" "lisp" "foo") testable-response ))
+
+)
+
+(deftest path-for-test (SupportFunctionsSuite)
+  (let ((testable-response (extract-relevant-file-paths  
+                              (mdcd:path-for "foo:bar" 'function) 4)))
+    (assert-equal '("mdcd" "lisp" "foo" "function") testable-response ))
+
+)
+
 ; RUN THE TEST
 (setf clunit:*clunit-report-format* :default)
 (print (run-suite 'EverythingSuite))
