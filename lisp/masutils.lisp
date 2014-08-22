@@ -13,6 +13,11 @@
 			:string?
 			:empty?
 
+			; list manipulation
+			:take
+			:drop
+			:sublist
+
 			; utilities
 			:println
 			:get-shell-output
@@ -122,11 +127,11 @@ nil
   (return-from get-shell-output out)))
 
 ; from scheme's srfi-1
-; "## Public: take (lst k)
+; "## Public: take (k lst)
 ; extracts the first k elements from the supplied list
 ; ### Parameters:
-; * lst - a list
 ; * k - the number of elements you wish to extract
+; * lst - a list
 ;
 ; ### Returns:
 ; The first k elements from the supplied list
@@ -138,8 +143,8 @@ nil
 ;
 ; ### Example: 
 ;
-;     (take '(1 2 3 4) 2 ) ;=> (1 2)
-;     (take '(1 2) 4) ;=> (1 2 NIL NIL)"
+;     (take 2 '(1 2 3 4) ) ;=> (1 2)
+;     (take 4 '(1 2) ) ;=> (1 2 NIL NIL)"
 
 (defun take (lst k)
   (if (eq 0 k)
@@ -152,6 +157,10 @@ nil
   (if (eq 0 k)
       lst
       (drop (cdr lst) (- k 1))))
+
+; zero based index
+(defun sublist (start end lst)
+  (loop for i from start upto end collect (nth i lst)))
 
 
 ; "## Public: split-by
