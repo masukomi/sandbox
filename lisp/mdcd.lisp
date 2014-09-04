@@ -29,39 +29,40 @@
   (append (cdr (split-sequence #\/ (ext:getenv "HOME" ))) '("mdcd" "lisp")))
 
 
-; ## Public: set-mcdc-home
-; Sets the directory where MCDC files are stored
-; 
-; ### Parameters:
-; * directory-list a list of directories.
-;   E.g.: '("home" "current_username")
-; 
-; ### Returns: 
-; The path to the directory it will save files to.
-;
+
 (defun set-mdcd-home (directory-list)
+"## Public: set-mcdc-home directory-list
+Sets the directory where MCDC files are stored
+
+### Parameters:
+* directory-list a list of directories.
+  E.g.: '(\"home\" \"current_username\")
+
+### Returns: 
+The path to the directory it will save files to."
+
   (defparameter *mdcd-home* directory-list)
         (get-mdcd-home))
         ; (namestring (get-mdcd-home)) => converted to string
 
-; ## Public: get-mdcd-home
-; Returns the path to the directory where MDCD files will be stored.
-; 
-; ### Returns:
-; The path to the directory where MDCD files will be stored.
-; 
-; ### Note:
-; Defaults to $HOME/mdcd/scheme/
 (defun get-mdcd-home ()
+"## Public: get-mdcd-home
+Returns the path to the directory where MDCD files will be stored.
+
+### Returns:
+The path to the directory where MDCD files will be stored.
+
+### Note:
+Defaults to $HOME/mdcd/scheme/"
   (make-pathname :directory `(:absolute ,@*mdcd-home*)))
 
-; ## Private: mdcd-name-cleaner
-; converts method and variable names into something more filesystem friendly
-; ### Parameters:
-; * name - the name to be cleaned.
-; ### Returns:
-; The "cleaned" name.
 (defun mdcd-name-cleaner (name)
+"## Private: mdcd-name-cleaner name
+converts method and variable names into something more filesystem friendly
+### Parameters:
+* name - the name to be cleaned.
+### Returns:
+The \"cleaned\" name."
   ; "[^\\w_\-]+" seemed like it was too likely to result
   ; in overlap. I could hash the name but I would prefer
   ; to keep the files as something meaningful to humans.
@@ -72,16 +73,18 @@
     (setf cleaned (substitute #\/ #\: cleaned))
     (return-from mdcd-name-cleaner cleaned)))
 
-; ## Public: mdcd-file-for
-; Provides the file-path for a given identifier. 
-; ### Paramaters:
-; * identifier - the function/variable/syntax you want documentation for.
-; * subfolder - This is typically the package name extracted from the name
-; * item-type - see the "doc" function for details on the item-type param
-; ### Returns:
-; The file-path where the identifiers docs should be written / found.
 
 (defun mdcd-file-for (identifier &optional (subfolder "") (item-type ""))
+"## Public: mdcd-file-for identifier [subfolder] [item-type]
+Provides the file-path for a given identifier. 
+
+### Paramaters:
+* identifier - the function/variable/syntax you want documentation for.
+* subfolder - This is typically the package name extracted from the name
+* item-type - see the \"doc\" function for details on the item-type param
+
+### Returns:
+The file-path where the identifiers docs should be written / found."
   (make-pathname :directory `(:absolute 
                               ,@*mdcd-home* 
                               ,subfolder
@@ -91,21 +94,31 @@
                               :type  "md"))
 
 (defun mdcd-ensure-dir (a-pathname)
+"## Private: mdcd-ensure-dir a-pathname
+Internal method that ensures that the directory in the 
+specified pathname actually exists so that we can write
+a file there.
+
+## Parameters:
+* a-pathname - a pathname
+
+## Returns:
+The directory"
   (ensure-directories-exist 
       (make-pathname :directory 
         (pathname-directory a-pathname))))
 
 
-; ## Private: mdcd-write-doc
-; Writes the specified doc-string to the specified file-path
-;
-; ### Paramaters:
-; * doc-string - the string of documentation
-; * a-pathname - the pathname where the filename that should be created / replaced
-;
-; ### Returns:
-; Returns true if successful
 (defun mdcd-write-doc (doc-string a-pathname )
+"## Private: mdcd-write-doc doc-string a-pathname
+Writes the specified doc-string to the specified file-path
+
+### Paramaters:
+* doc-string - the string of documentation
+* a-pathname - the pathname where the filename that should be created / replaced
+
+### Returns:
+Returns true if successful"
   (mdcd-ensure-dir a-pathname)
   (let ((stream 
                 (open a-pathname
@@ -115,6 +128,16 @@
 
 
 (defun path-for (name item-type)
+"## Private: path-for name item-type
+Determines the path to where the markdown file should be saved for 
+the item specified.
+
+## Parameters:
+* name - the name of the thing that's being documented
+* item-type - see the \"doc\" function for details on the item-type param
+
+## Returns:
+A filepath"
   (let* (
         (name (mdcd-name-cleaner 
                   (string-downcase (if (typep name 'symbol)
@@ -150,9 +173,8 @@
       )))
 
 
-(defun doc (name doc-string 
-  &optional &key (item-type :function) (grouping nil))
-"## Public: doc
+(defun doc (name doc-string &optional &key (item-type :function) (grouping nil))
+"## Public: doc name doc-string [keys: item-type, grouping]
 Generates and saves documentation.
 
 ### Paramaters:
@@ -192,6 +214,14 @@ and item-type should be more than enough.
 ; YAY.
 ; Alas, there's nothing left that needs documenting.
 
+; Document the existing things!
+(doc "mdcd:set-mdcd-home" (documentation 'set-mdcd-home 'function))
+(doc "mdcd:get-mdcd-home" (documentation 'get-mdcd-home 'function))
+(doc "mdcd:mdcd-name-cleaner" (documentation 'mdcd-name-cleaner 'function))
+(doc "mdcd:mdcd-file-for" (documentation 'mdcd-file-for 'function))
+(doc "mdcd:mdcd-ensure-dir" (documentation 'mdcd-ensure-dir 'function))
+(doc "mdcd:mdcd-write-doc" (documentation 'mdcd-write-doc 'function))
+(doc "mdcd:path-for" (documentation 'path-for 'function))
 (doc "mdcd:doc" (documentation 'doc 'function))
 
 (defun show-doc (name &optional &key (item-type :function))
@@ -261,6 +291,8 @@ where it attempted to find it.
         (t `(,(cons (+ 1 line-num) (string-is-md-header? (car lines))))))
       )))
 
+
+(defun extract-section (section doc-string)
 ;   (doc 'extract-section "## Private: extract-section
 ; Extracts the specified section of a given doc string (if available).
 ;
@@ -273,8 +305,6 @@ where it attempted to find it.
 ;   of the specified section
 ; ### Returns: 
 ; The extracted section of the docs." )
-
-(defun extract-section (section doc-string)
   (let* ((lines (split-sequence #\newline doc-string))
         (response '())
         (header-line-nums (find-header-lines lines))
@@ -300,3 +330,19 @@ where it attempted to find it.
 (defun show-params (name &optional &key (item-type :function) )
   (extract-section :parameters (show-doc name item-type )))
 
+
+; (doc "mdcd" "# MarkDown Code Documentation (MDCD)
+; DESCRIPTION HERE
+;
+; ## Conventions
+; In order to intelligently extract subsections of your documentation
+; MDCD relies on the usage of a set of common MarkDown headers to denote
+; the start of each section.
+;
+; * Parameters - starts a section explaining the parameters
+;   taken by a function
+; * Returns - starts a section indicating what a function returns
+; * Notes - starts a section of arbitrary notes
+; * Examples - starts a section of examples of the usage of the function
+; " 
+; :item-type :meta)

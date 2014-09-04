@@ -78,13 +78,21 @@
   (let ((testable-response (extract-relevant-file-paths  
                               (mdcd:mdcd-file-for "bar" "foo") 3)))
     (assert-equal '("mdcd" "lisp" "foo") testable-response ))
-
 )
 
 (deftest path-for-test (SupportFunctionsSuite)
   (let ((testable-response (extract-relevant-file-paths  
                               (mdcd:path-for "foo:bar" 'function) 4)))
     (assert-equal '("mdcd" "lisp" "foo" "function") testable-response ))
+  (let* ( (path-for-response (mdcd:path-for "foo" :meta))
+          (testable-response (extract-relevant-file-paths  
+                              path-for-response 3)))
+    (assert-equal '("mdcd" "lisp" "foo") testable-response ))
+    ; TODO CHANGE THE ABOVE
+    ; assert that  (pathname-name path-for-response)
+    ; does NOT return NIL
+    ; test that the filename is meta.md 
+
 
 )
 
