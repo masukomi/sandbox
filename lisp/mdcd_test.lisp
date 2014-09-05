@@ -84,10 +84,15 @@
   (let ((testable-response (extract-relevant-file-paths  
                               (mdcd:path-for "foo:bar" 'function) 4)))
     (assert-equal '("mdcd" "lisp" "foo" "function") testable-response ))
+    
   (let* ( (path-for-response (mdcd:path-for "foo" :meta))
           (testable-response (extract-relevant-file-paths  
                               path-for-response 3)))
-    (assert-equal '("mdcd" "lisp" "foo") testable-response ))
+    (assert-equal '("mdcd" "lisp" "foo") testable-response )
+    (assert (not (null (pathname-name path-for-response))))
+    (assert-equal "meta" (pathname-name path-for-response))
+    (assert-equal "md" (pathname-type path-for-response))
+    )
     ; TODO CHANGE THE ABOVE
     ; assert that  (pathname-name path-for-response)
     ; does NOT return NIL

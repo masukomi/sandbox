@@ -85,10 +85,11 @@ Provides the file-path for a given identifier.
 
 ### Returns:
 The file-path where the identifiers docs should be written / found."
+
   (make-pathname :directory `(:absolute 
                               ,@*mdcd-home* 
                               ,subfolder
-                              ,item-type)
+                              ,(if (equal""meta" item-type ) "" item-type))
                               :name
                               identifier
                               :type  "md"))
@@ -146,7 +147,8 @@ A filepath"
                   ; ^^ makes the package delimiters look like path delimiters
         (split-name (split-sequence #\/ name))
         (subfolder (car split-name))
-        (name-name (nth 1 split-name))
+        (tail-name (nth 1 split-name))
+        (item-type-string (string-downcase (symbol-name item-type)))
           ; ^^ treats the path delimiters like directory indicators
           ; 
           ; name should always look like a variable
@@ -158,18 +160,22 @@ A filepath"
           ; in the end.
 
     ); END let vars
+    
     ; subfolder is currently a pathname object
     ; need to convert it to a string
-    (if (equal name-name name)
+    (if (equal tail-name name)
         (setf subfolder ""))
-    ; name      : foo/bar
-    ; name-name : bar
+    item-type subfolder)
+    (if (and (eq item-type :meta) (null tail-name) )
+          (setf tail-name "meta"))
+    ; name      : foo:bar
+    ; tail-name : bar
     ; subfolder : foo
     ; item-type : FUNCTIONF
     (mdcd-file-for 
-      name-name                                 ; identifier
+      tail-name                                 ; identifier
       subfolder                                 ; subfolder
-      (string-downcase (symbol-name item-type)) ; item-type
+      item-type-string ; item-type
       )))
 
 
