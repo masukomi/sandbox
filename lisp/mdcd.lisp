@@ -28,7 +28,33 @@
 (defparameter *mdcd-home* 
   (append (cdr (split-sequence #\/ (ext:getenv "HOME" ))) '("mdcd" "lisp")))
 
+; ## Private *writes-enabled*
+; Lets the system know if it's allowed to 
+; write to the filesystem. Useful when testing
+; or when deploying on a system where you don't want 
+; or need the docs written out.
+(defparameter *writes-enabled* t)
 
+(defun enable-writes ()
+"## Public: enabled-writes
+
+Tells MDCD it is allowed to write to the filesystem.
+This is the default state.
+
+## Returns:
+T"
+  (defparameter *writes-enabled* t))
+
+(defun disable-writes ()
+"## Public: disable-writes
+
+Tells MDCD it's not allowed towrite to the filesystem. 
+Useful when testing or when deploying on a system where you don't want 
+or need the docs written out. 
+
+## Returns:
+NULL"
+  (defparameter *writes-enabled* NULL))
 
 (defun set-mdcd-home (directory-list)
 "## Public: set-mcdc-home directory-list
@@ -89,7 +115,7 @@ The file-path where the identifiers docs should be written / found."
   (make-pathname :directory `(:absolute 
                               ,@*mdcd-home* 
                               ,subfolder
-                              ,(if (equal""meta" item-type ) "" item-type))
+                              ,(if (equal "meta" item-type ) "" item-type))
                               :name
                               identifier
                               :type  "md"))
@@ -165,7 +191,6 @@ A filepath"
     ; need to convert it to a string
     (if (equal tail-name name)
         (setf subfolder ""))
-    item-type subfolder)
     (if (and (eq item-type :meta) (null tail-name) )
           (setf tail-name "meta"))
     ; name      : foo:bar
@@ -210,11 +235,10 @@ and item-type should be more than enough.
  ; to have its documentation set.
  ; instead we'll just use print
  ;(setf (documentation name 'function) doc-string)
- (let ((file-path (path-for name item-type)))
-        (mdcd-write-doc doc-string file-path)
-        file-path)
-        doc-string)
-        
+ (if *writes-enabled*
+  (let ((file-path (path-for name item-type)))
+        (mdcd-write-doc doc-string file-path)))
+ doc-string)
 
 ; We now have enough code to start eating our own dog food.
 ; YAY.

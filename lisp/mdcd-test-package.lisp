@@ -17,6 +17,8 @@
       :set-mdcd-home
       :get-mdcd-home
       :path-for
+      :enable-writes
+      :disable-writes
 
       ; PRIVATE METHODS EXPOSED JUST FOR TESTING
       :line-matches-section?
@@ -24,4 +26,5 @@
       :find-header-lines
       :string-is-md-header?
       :mdcd-file-for
+      :mdcd-name-cleaner
     ))
