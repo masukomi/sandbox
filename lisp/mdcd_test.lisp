@@ -9,6 +9,8 @@
 (use-package :clunit)
 
 (ql:quickload "cl-utilities")
+;(shadowing-import 'cl-utilities:with-gensyms)
+;(use-package :cl-utilities)
 (load "mdcd-test-package.lisp")
 (load "mdcd.lisp")
 
@@ -16,6 +18,7 @@
 (defsuite EverythingSuite ())
 
 (defsuite SupportFunctionsSuite (EverythingSuite))
+(defsuite PublicFunctionsSuite (EverythingSuite))
 
 (deftest line-matches-section-test (SupportFunctionsSuite)
   (assert-equal t (mdcd:line-matches-section? "## Foo" 0 :description))
@@ -46,17 +49,40 @@
         ))
 
 (deftest find-header-lines-test (SupportFunctionsSuite)
-  (let ((split-doc-string '("## Public: foo" 
+  (let ((doc-string '("## Public: foo" 
                             "description" 
                             "### Parameters: "
                             "* this - this thing"
                             "* that - that thing"
                             "## Notes:"
                             "notes here")))
-    (assert-equal '(0 2 5) (mdcd:find-header-lines split-doc-string))
+    (assert-equal '(0 2 5) (mdcd:find-header-lines doc-string))
                             ))
 
+(deftest extract-section-test (SupportFunctionsSuite)
+  (let ((doc-string "## Public: foo 
+description 
+### Parameters: 
+* this - this thing
+* that - that thing
+## Notes:
+notes here")
+        (params-string "### Parameters: 
+* this - this thing
+* that - that thing") ; 56 chars long
+)
+
+    (assert-equal params-string (mdcd:extract-section :parameters doc-string))
+
+    (assert-equal "## Notes:
+notes here" (mdcd:extract-section :notes doc-string))
+
+
+  )
+)
+
 (defun extract-relevant-file-paths (ff-response last-n)
+  "This is just a support function"
   (let* ((ff-response-dir (cdr (pathname-directory ff-response)))
          (testable-response 
           (loop for i from (- (length ff-response-dir) last-n) 
@@ -93,12 +119,6 @@
     (assert-equal "meta" (pathname-name path-for-response))
     (assert-equal "md" (pathname-type path-for-response))
     )
-    ; TODO CHANGE THE ABOVE
-    ; assert that  (pathname-name path-for-response)
-    ; does NOT return NIL
-    ; test that the filename is meta.md 
-
-
 )
 
 ; RUN THE TEST

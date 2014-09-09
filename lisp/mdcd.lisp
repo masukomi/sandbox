@@ -339,22 +339,23 @@ where it attempted to find it.
         (response '())
         (header-line-nums (find-header-lines lines))
         ) ;end let vars
-    (do ((remaining-header-lines header-line-nums (cdr remaining-header-lines))
-          (line-number (car header-line-nums) (car remaining-header-lines))
+    (do ((remaining-header-line-nums header-line-nums (cdr remaining-header-line-nums))
+          (header-line-number (car header-line-nums) (car remaining-header-line-nums))
         )
       (nil)                       ;Do forever(ish).
-      (if line-number
-          (let ((line (nth line-number lines))
-                (next-line (nth (+ 1 line-number) lines))
-                (more-headers (> (length remaining-header-lines) 0))
+      (if header-line-number
+          (let ((line (nth header-line-number lines))
+                (next-line (nth (+ 1 header-line-number) lines))
+                (more-headers (> (length remaining-header-line-nums) 0))
                 )
-            (if (line-matches-section? line line-number section) 
+            (if (line-matches-section? line header-line-number section) 
                  (return-from extract-section
-                    (if (and 
+                    (format nil "~{~a~^~%~}" (if (and 
                           next-line ; if this is not the last line
                           more-headers) ; and there's a header after 
-                          (loop for i from line-number to (- (nth 1 remaining-header-lines) 1) collect (nth i lines))
-                          (loop for i from line-number to (- (length lines) 1) collect (nth i lines))))))
+                          (loop for i from header-line-number to (- (car remaining-header-line-nums) 1) collect (nth i lines))
+                          (loop for i from header-line-number to (- (length
+                          lines) 1) collect (nth i lines)))  ))))
           (return nil)))))
 
 (defun show-params (name &optional &key (item-type :function) )

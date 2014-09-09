@@ -14,6 +14,7 @@
 	(:export
       :doc
       :show-doc
+      :show-params
       :set-mdcd-home
       :get-mdcd-home
       :path-for
@@ -27,4 +28,5 @@
       :string-is-md-header?
       :mdcd-file-for
       :mdcd-name-cleaner
+      :extract-section
     ))
