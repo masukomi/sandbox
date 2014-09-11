@@ -77,9 +77,9 @@ notes here")
     (assert-equal "## Notes:
 notes here" (mdcd:extract-section :notes doc-string))
 
-
-  )
-)
+    ; an attempt to extract a non-existent section should return nil
+    (assert-equal nil (mdcd:extract-section :returns doc-string ))
+))
 
 (defun extract-relevant-file-paths (ff-response last-n)
   "This is just a support function"
@@ -116,10 +116,8 @@ notes here" (mdcd:extract-section :notes doc-string))
                               path-for-response 3)))
     (assert-equal '("mdcd" "lisp" "foo") testable-response )
     (assert (not (null (pathname-name path-for-response))))
-    (assert-equal "meta" (pathname-name path-for-response))
-    (assert-equal "md" (pathname-type path-for-response))
-    )
-)
+    (assert-equal "index" (pathname-name path-for-response))
+    (assert-equal "md" (pathname-type path-for-response)) ))
 
 ; RUN THE TEST
 (setf clunit:*clunit-report-format* :default)

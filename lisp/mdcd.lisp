@@ -192,7 +192,7 @@ A filepath"
     (if (equal tail-name name)
         (setf subfolder ""))
     (if (and (eq item-type :meta) (null tail-name) )
-          (setf tail-name "meta"))
+          (setf tail-name "index"))
     ; name      : foo:bar
     ; tail-name : bar
     ; subfolder : foo
@@ -361,19 +361,35 @@ where it attempted to find it.
 (defun show-params (name &optional &key (item-type :function) )
   (extract-section :parameters (show-doc name item-type )))
 
+(defun show-returns (name &optional &key (item-type :function) )
+  (extract-section :returns (show-doc name item-type )))
 
-; (doc "mdcd" "# MarkDown Code Documentation (MDCD)
-; DESCRIPTION HERE
-;
-; ## Conventions
-; In order to intelligently extract subsections of your documentation
-; MDCD relies on the usage of a set of common MarkDown headers to denote
-; the start of each section.
-;
-; * Parameters - starts a section explaining the parameters
-;   taken by a function
-; * Returns - starts a section indicating what a function returns
-; * Notes - starts a section of arbitrary notes
-; * Examples - starts a section of examples of the usage of the function
-; " 
-; :item-type :meta)
+(defun show-notes (name &optional &key (item-type :function) )
+  (extract-section :returns (show-doc name item-type )))
+
+(defun show-examples (name &optional &key (item-type :function) )
+  (extract-section :examples (show-doc name item-type )))
+
+(defun show-section (name section-symbol &optional &key (item-type :function))
+  (extract-section section-symbol (show-doc name item-type)))
+
+(doc "mdcd" "# MarkDown Code Documentation (MDCD)
+DESCRIPTION HERE
+
+## Conventions
+In order to intelligently extract subsections of your documentation
+MDCD uses a convention of MarkDown headers to denote
+the start of each section.
+
+* \"Parameters\" - starts a section explaining the parameters
+  taken by a function
+* \"Returns\" - starts a section indicating what a function returns
+* \"Notes\" - starts a section of arbitrary notes
+* \"Examples\" - starts a section of examples of the usage of the function
+
+It doesn't particularly matter what header you use for the first 
+line of a function's docs, but it's recommended that you go with 
+\"Public\" or \"Private\" followed by a method signature. See MDCD's 
+documentation for examples." 
+:item-type :meta)
+
