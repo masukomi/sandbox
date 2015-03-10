@@ -18,6 +18,9 @@
 			:drop
 			:sublist
 
+			; hash-table manipulation
+			:hash
+
 			; utilities
 			:println
 			:get-shell-output
@@ -28,7 +31,7 @@
 ;;; COMPARISON FUNCTIONS
 (defmacro == (a b) `(equalp ,a ,b))
 (defmacro != (a b) `(not (equalp ,a ,b)))
-(defmacro === (a b) `(equal ,a ,b))
+(defmacro === (a b) `(eq ,a ,b))
 
 (defun boolit (var)
 "converts a value into t or nil
@@ -91,40 +94,8 @@ t or nil
 		(if (string= "CONS" (type-of type-result))
 			(not (not (string= "SIMPLE-BASE-STRING" (nth 0 (values type-result))))))))
 
-;;;;;;;;; Other
 
-(defun println (input)
-"Sends the input to standard out followed by a newline
-
-## Retuns:
-nil
-
-## Parameters
-* input - a string "
-	(format t "~A~A" input #\newline))
-
-
-;TODO: return response code in addition to lines
-;      will result in a more complicated data structure
-;      but hey... :)
-(defun get-shell-output (command &optional (args '()))
-"Runs the specified shell program with the specified arguments
-
-## Returns: the response lines as a list
-
-## Parameters: 
-* command - a string representing the command to run in the shell
-* args - an optional list of arguments (strings) to pass to the command
-"
-(let (
-       (in (ext:run-program command :arguments args :output :stream))
-       (out '()))
-  (when in
-    (loop for line = (read-line in nil) 
-      while line do (setf out (append out (list line)))
-    )
-    (close in))
-  (return-from get-shell-output out)))
+;;;;;;;;; List manipulation
 
 ; from scheme's srfi-1
 ; "## Public: take (k lst)
@@ -183,6 +154,47 @@ nil
      (if (not (eq list-size 0))
          (cons (take lst n) (split-by n (drop lst n)))
          '() )))
+
+;;;;;;;;; Hash-table manipulation
+(defun hash (hashtable key &optional value)
+	(if (not value)
+		(gethash key hashtable)
+		(setf (gethash key hashtable) value)))
+
+;;;;;;;;; Other
+
+(defun println (input)
+"Sends the input to standard out followed by a newline
+
+## Retuns:
+nil
+
+## Parameters
+* input - a string "
+	(format t "~A~A" input #\newline))
+
+
+;TODO: return response code in addition to lines
+;      will result in a more complicated data structure
+;      but hey... :)
+(defun get-shell-output (command &optional (args '()))
+"Runs the specified shell program with the specified arguments
+
+## Returns: the response lines as a list
+
+## Parameters: 
+* command - a string representing the command to run in the shell
+* args - an optional list of arguments (strings) to pass to the command
+"
+(let (
+       (in (ext:run-program command :arguments args :output :stream))
+       (out '()))
+  (when in
+    (loop for line = (read-line in nil) 
+      while line do (setf out (append out (list line)))
+    )
+    (close in))
+  (return-from get-shell-output out)))
 
 
 
