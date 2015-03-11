@@ -20,10 +20,12 @@
 
 			; hash-table manipulation
 			:hash
+			:alist->hash
 
 			; utilities
 			:println
 			:get-shell-output
+			:range
 		))
 
 (in-package :masutils)
@@ -161,7 +163,19 @@ t or nil
 		(gethash key hashtable)
 		(setf (gethash key hashtable) value)))
 
-;;;;;;;;; Other
+(defun hash-keys (hash-table)
+  (loop for key being the hash-keys of hash-table collect key))
+
+(defun alist->hash (alist)
+  (let ((new-hash (make-hash-table :size (length alist))))
+    (loop for pair in alist 
+      do (setf (gethash (car pair) new-hash) (cdr pair))
+    )
+    new-hash
+  )
+)
+
+;;;;;;;;; Utilities
 
 (defun println (input)
 "Sends the input to standard out followed by a newline
@@ -196,7 +210,8 @@ nil
     (close in))
   (return-from get-shell-output out)))
 
-
+(defun range (count &optional (start 0) (step 1))
+  (loop repeat count for i from start by step collect i))
 
 ;;;;;;;;; Command Line Helpers
 
