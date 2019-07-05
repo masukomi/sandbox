@@ -1,0 +1,13 @@
+<div class="mermaid">
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+</div>
+
+<script>
+var diff = document.getElementById('firstdiff'); diff.parentNode.removeChild(diff);
+</script>
+<script src="mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>

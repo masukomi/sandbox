@@ -1,0 +1,12 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    motion-osx-cli (1.0)
+    rake (10.4.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  motion-osx-cli
+  rake

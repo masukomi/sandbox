@@ -1,0 +1,14 @@
+PATH
+  remote: /Users/masukomi/workspace/cleandiff2
+  specs:
+    cleandiff (2.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  cleandiff!
