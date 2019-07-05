@@ -6,14 +6,7 @@
     ===
     !==
     boolify
-    char?
-
-    ; list manipulation
-    sublist
-
-    hash
-    keys
-    alist->hash
+    get-type
     )
 
   (import chicken)
@@ -31,9 +24,21 @@
   (define (!== a b)
     (not (=== a b)))
 
-  (define (boolit x)
+  (define (boolify x)
     (not (not x)))
 
-  
-  
+  (define (get-type x)
+    (cond 
+      ((number? x)   'number)
+      ((list? x)     'list)
+      ((pair? x)     'pair)
+      ((string? x)   'string)
+      ((boolean? x)  'boolean)
+      ((null? x)     'null)
+      ((symbol? x)   'symbol)
+      ((char? x)     'character)
+      ((vector? x)   'vector)
+      ((procedure? x)'procedure)
+      (else          'unknown)))
   )
+
